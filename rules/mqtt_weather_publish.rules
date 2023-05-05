@@ -1,0 +1,45 @@
+rule "MQTT Weather Publish"
+
+when 
+	Time cron "0 * * * * ?" //for debug
+then
+    var floatTempUstavka4erdak = (TempUstavka4erdak.state as Number).floatValue
+    var stringTempUstavka4erdak = TempUstavka4erdak.state.toString
+    logInfo("mqtt_weather_publish-1", "floatTempUstavka4erdak = " + floatTempUstavka4erdak)
+    logInfo("mqtt_weather_publish-1", "floatTempUstavka4erdak = " + stringTempUstavka4erdak)
+    val actions = getActions("mqtt","mqtt:broker:f2c2c722de")  
+    actions.publishMQTT("temp_ustavka/4erdak", stringTempUstavka4erdak)
+
+    var floatTempUstavka_TeplyjPol_Correction = (TempUstavka_TeplyjPol_Correction.state as Number).floatValue
+    var stringTempUstavka_TeplyjPol_Correction = TempUstavka_TeplyjPol_Correction.state.toString
+    logInfo("mqtt_weather_publish-1", "floatTempUstavka_TeplyjPol_Correction = " + floatTempUstavka_TeplyjPol_Correction)
+    logInfo("mqtt_weather_publish-1", "floatTempUstavka_TeplyjPol_Correction = " + stringTempUstavka_TeplyjPol_Correction)
+    actions.publishMQTT("temp_ustavka/TeplyjPol_Correction", stringTempUstavka_TeplyjPol_Correction)
+
+    var floatWind = (LocalWeatherandForecast_WindSpeed.state as Number).floatValue
+    var stringWind = LocalWeatherandForecast_WindSpeed.state.toString
+    logInfo("mqtt_weather_publish-1", "floatWind = " + floatWind)
+    logInfo("mqtt_weather_publish-1", "stringWind = " + stringWind)
+    actions.publishMQTT("weather/wind", stringWind)
+
+    var wind_ms = 100*floatWind/3.6; 
+    logInfo("mqtt_weather_publish-1", "we are here= " )
+    wind_ms = wind_ms.intValue
+    wind_ms = wind_ms/100
+    wind_ms = wind_ms.toString + " m/s"; 
+    logInfo("mqtt_weather_publish-1", "wind_ms = " + wind_ms)
+    actions.publishMQTT("weather/wind_ms", wind_ms)
+
+    var floatTemp = (LocalWeatherandForecast_OutdoorTemperature.state as Number).floatValue
+    var stringTemp = LocalWeatherandForecast_OutdoorTemperature.state.toString  
+    logInfo("mqtt_weather_publish-1", "stringTemp = " + stringTemp)
+    actions.publishMQTT("weather/temp", stringTemp)
+    if ((floatTemp - floatWind/3.6) > 17) {
+        actions.publishMQTT("heat/nasosTeplyjPolState", "OFF")
+        logInfo("mqtt_weather_publish-1", "SWITCHING nasosTeplyjPolState OFF" )
+    } else {
+        actions.publishMQTT("heat/nasosTeplyjPolState", "ON")
+         logInfo("mqtt_weather_publish-1", "SWITCHING nasosTeplyjPolState ON" )
+   }
+
+end
